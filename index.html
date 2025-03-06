@@ -8,14 +8,16 @@
         body { font-family: Arial, sans-serif; text-align: center; }
         h2 { margin-top: 20px; }
         #messages { max-width: 500px; margin: auto; border: 1px solid #ddd; padding: 10px; }
+        button { margin-top: 10px; padding: 5px 10px; }
     </style>
 </head>
 <body>
     <h2>입금 기록</h2>
     <div id="messages">로딩 중...</div>
+    <button onclick="resetMessages()">기록 초기화</button>
 
     <script>
-        const SHEET_ID = "1CW_kDKBnp7i13a92BlraomJilzcNlw40hxf9-aPWWiU"; // Google Sheets ID 입력
+        const SHEET_ID = "YOUR_SHEET_ID"; // Google Sheets ID 입력
         const API_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`;
 
         async function fetchSheetData() {
@@ -36,6 +38,11 @@
                 console.error("Error loading data:", error);
                 document.getElementById("messages").innerHTML = "<p>데이터를 불러오는 중 오류 발생</p>";
             }
+        }
+
+        function resetMessages() {
+            localStorage.removeItem("deposit_records"); // 저장된 기록 삭제
+            document.getElementById("messages").innerHTML = "<p>아직 기록이 없습니다.</p>"; // 화면 초기화
         }
 
         document.addEventListener("DOMContentLoaded", fetchSheetData);
