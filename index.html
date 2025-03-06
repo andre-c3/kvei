@@ -15,7 +15,7 @@
     <div id="messages">로딩 중...</div>
 
     <script>
-        const SHEET_ID = "1CW_kDKBnp7i13a92BlraomJilzcNlw40hxf9-aPWWiU"; // Google Sheets ID 입력
+        const SHEET_ID = "YOUR_SHEET_ID"; // Google Sheets ID 입력
         const API_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`;
 
         async function fetchSheetData() {
@@ -23,7 +23,7 @@
                 const response = await fetch(API_URL);
                 const text = await response.text();
                 
-                // JSON 데이터 변환 (Google Sheets 데이터 파싱)
+                // Google Sheets 데이터 변환
                 const json = JSON.parse(text.substring(47, text.length - 2));
                 const rows = json.table.rows;
 
