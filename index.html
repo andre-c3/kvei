@@ -23,12 +23,12 @@
     function addMessage(msg) {
         const data = localStorage.getItem(STORAGE_KEY);
         const messages = data ? JSON.parse(data) : [];
-        messages.push(decodeURIComponent(msg)); // 한글, 특수문자 처리
+        messages.push(decodeURIComponent(msg)); // 한글, 공백 처리
         localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
         loadMessages();
     }
 
-    // 4. GET 요청 처리 (기존 방식)
+    // 4. GET 요청 처리
     window.onload = function() {
         loadMessages();
         const urlParams = new URLSearchParams(window.location.search);
@@ -36,28 +36,4 @@
             addMessage(urlParams.get("message"));
         }
     };
-
-    // 5. POST 요청 처리 (새로운 방식 추가)
-    window.addEventListener("message", function(event) {
-        if (event.data && event.data.message) {
-            addMessage(event.data.message);
-        }
-    });
-
-    // 6. 웹페이지에서 직접 JSON 데이터를 받을 수 있도록 추가
-    async function receivePostRequest() {
-        if (window.location.pathname.includes("index.html")) {
-            const response = await fetch(window.location.href, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ message: "테스트 POST 메시지" })
-            });
-            const data = await response.json();
-            if (data.message) {
-                addMessage(data.message);
-            }
-        }
-    }
-
-    receivePostRequest();
 </script>
