@@ -43,4 +43,21 @@
             addMessage(event.data.message);
         }
     });
+
+    // 6. 웹페이지에서 직접 JSON 데이터를 받을 수 있도록 추가
+    async function receivePostRequest() {
+        if (window.location.pathname.includes("index.html")) {
+            const response = await fetch(window.location.href, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ message: "테스트 POST 메시지" })
+            });
+            const data = await response.json();
+            if (data.message) {
+                addMessage(data.message);
+            }
+        }
+    }
+
+    receivePostRequest();
 </script>
