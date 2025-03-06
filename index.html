@@ -1,39 +1,58 @@
-<script>
-    const STORAGE_KEY = "deposit_records";
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>입금 기록</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; }
+        h2 { margin-top: 20px; }
+        #messages { max-width: 500px; margin: auto; border: 1px solid #ddd; padding: 10px; }
+    </style>
+</head>
+<body>
+    <h2>입금 기록</h2>
+    <div id="messages">로딩 중...</div>
 
-    // 1. 매달 1일이면 데이터 초기화
-    function checkReset() {
-        const today = new Date();
-        if (today.getDate() === 1) { // 매달 1일
-            localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
+    <script>
+        const STORAGE_KEY = "deposit_records";
+
+        // 1. 매달 1일이면 데이터 초기화
+        function checkReset() {
+            const today = new Date();
+            if (today.getDate() === 1) { // 매달 1일
+                localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
+            }
         }
-    }
 
-    // 2. 기존 데이터 불러오기
-    function loadMessages() {
-        checkReset();
-        const data = localStorage.getItem(STORAGE_KEY);
-        const messages = data ? JSON.parse(data) : [];
-        document.getElementById("messages").innerHTML = messages.length > 0 
-            ? messages.map(msg => `<p>${msg}</p>`).join("")
-            : "<p>아직 기록이 없습니다.</p>";
-    }
-
-    // 3. MacroDroid에서 문자 내용을 받으면 저장
-    function addMessage(msg) {
-        const data = localStorage.getItem(STORAGE_KEY);
-        const messages = data ? JSON.parse(data) : [];
-        messages.push(decodeURIComponent(msg)); // 한글, 특수문자 처리 추가
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
-        loadMessages();
-    }
-
-    // 4. URL에서 message 값을 읽어서 추가
-    window.onload = function() {
-        loadMessages();
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.has("message")) {
-            addMessage(urlParams.get("message"));
+        // 2. 기존 데이터 불러오기
+        function loadMessages() {
+            checkReset();
+            const data = localStorage.getItem(STORAGE_KEY);
+            const messages = data ? JSON.parse(data) : [];
+            document.getElementById("messages").innerHTML = messages.length > 0 
+                ? messages.map(msg => `<p>${msg}</p>`).join("")
+                : "<p>아직 기록이 없습니다.</p>";
         }
-    };
-</script>
+
+        // 3. MacroDroid에서 문자 내용을 받으면 저장
+        function addMessage(msg) {
+            const data = localStorage.getItem(STORAGE_KEY);
+            const messages = data ? JSON.parse(data) : [];
+            messages.push(msg);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
+            loadMessages();
+        }
+
+        // 4. MacroDroid에서 문자 내용을 추가할 수 있도록 API 기능 제공
+        window.onload = function() {
+            loadMessages();
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has("message")) {
+                addMessage(urlParams.get("message"));
+            }
+        };
+    </script>
+
+</body>
+</html>
