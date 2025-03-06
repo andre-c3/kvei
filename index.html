@@ -19,21 +19,11 @@
             : "<p>아직 기록이 없습니다.</p>";
     }
 
-    // 3. MacroDroid에서 문자 내용을 받으면 저장 (필요한 부분만 추출)
-    function addMessage(rawMsg) {
+    // 3. MacroDroid에서 문자 내용을 받으면 저장
+    function addMessage(msg) {
         const data = localStorage.getItem(STORAGE_KEY);
         const messages = data ? JSON.parse(data) : [];
-        
-        // URL 인코딩된 문자 복호화 (한글 깨짐 방지)
-        let msg = decodeURIComponent(rawMsg);
-
-        // "입금 500원" 뒤의 텍스트만 추출
-        let match = msg.match(/입금 500원\s*(.+)/);
-        if (match) {
-            msg = match[1]; // "입금 500원" 뒤의 내용만 저장
-        }
-
-        messages.push(msg);
+        messages.push(decodeURIComponent(msg)); // 한글, 특수문자 처리 추가
         localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
         loadMessages();
     }
