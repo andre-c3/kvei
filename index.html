@@ -1,57 +1,49 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>입금 기록</title>
-    <style>
-        body { font-family: Arial, sans-serif; text-align: center; }
-        h2 { margin-top: 20px; }
-        #messages { max-width: 500px; margin: auto; border: 1px solid #ddd; padding: 10px; }
-    </style>
-</head>
-<body>
-    <h2>입금 기록</h2>
-    <div id="messages">로딩 중...</div>
+<script>
+    const STORAGE_KEY = "deposit_records";
 
-    <script>
-        const STORAGE_KEY = "deposit_records";
+    // 1. 매달 1일이면 데이터 초기화
+    function checkReset() {
+        const today = new Date();
+        if (today.getDate() === 1) { // 매달 1일
+            localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
+        }
+    }
 
-        // 1. 매달 1일이면 데이터 초기화
-        function checkReset() {
-            const today = new Date();
-            if (today.getDate() === 1) { // 매달 1일
-                localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
-            }
+    // 2. 기존 데이터 불러오기
+    function loadMessages() {
+        checkReset();
+        const data = localStorage.getItem(STORAGE_KEY);
+        const messages = data ? JSON.parse(data) : [];
+        document.getElementById("messages").innerHTML = messages.length > 0 
+            ? messages.map(msg => `<p>${msg}</p>`).join("")
+            : "<p>아직 기록이 없습니다.</p>";
+    }
+
+    // 3. MacroDroid에서 문자 내용을 받으면 저장 (필요한 부분만 추출)
+    function addMessage(rawMsg) {
+        const data = localStorage.getItem(STORAGE_KEY);
+        const messages = data ? JSON.parse(data) : [];
+        
+        // URL 인코딩된 문자 복호화 (한글 깨짐 방지)
+        let msg = decodeURIComponent(rawMsg);
+
+        // "입금 500원" 뒤의 텍스트만 추출
+        let match = msg.match(/입금 500원\s*(.+)/);
+        if (match) {
+            msg = match[1]; // "입금 500원" 뒤의 내용만 저장
         }
 
-        // 2. 기존 데이터 불러오기
-        function loadMessages() {
-            checkReset();
-            const data = localStorage.getItem(STORAGE_KEY);
-            const messages = data ? JSON.parse(data) : [];
-            document.getElementById("messages").innerHTML = messages.length > 0 
-                ? messages.map(msg => `<p>${msg}</p>`).join("")
-                : "<p>아직 기록이 없습니다.</p>";
-        }
+        messages.push(msg);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
+        loadMessages();
+    }
 
-        // 3. 문자 내용을 저장하는 함수
-        function addMessage(msg) {
-            const data = localStorage.getItem(STORAGE_KEY);
-            const messages = data ? JSON.parse(data) : [];
-            messages.push(decodeURIComponent(msg)); // 한글, 공백 처리
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
-            loadMessages();
+    // 4. URL에서 message 값을 읽어서 추가
+    window.onload = function() {
+        loadMessages();
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has("message")) {
+            addMessage(urlParams.get("message"));
         }
-
-        // 4. GET 요청 처리
-        window.onload = function() {
-            loadMessages();
-            const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.has("message")) {
-                addMessage(urlParams.get("message"));
-            }
-        };
-    </script>
-</body>
-</html>
+    };
+</script>
