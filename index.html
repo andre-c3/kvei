@@ -19,28 +19,39 @@
             : "<p>아직 기록이 없습니다.</p>";
     }
 
-    // 3. MacroDroid에서 문자 내용을 받으면 저장 (올바르게 "입금 500원" 제거)
+    // 3. MacroDroid에서 문자 내용을 받으면 저장 (안전한 방식으로 "입금 500원" 제거)
     function addMessage(rawMsg) {
-        const data = localStorage.getItem(STORAGE_KEY);
-        const messages = data ? JSON.parse(data) : [];
+        try {
+            const data = localStorage.getItem(STORAGE_KEY);
+            const messages = data ? JSON.parse(data) : [];
 
-        // URL 인코딩된 문자 복호화 (한글 깨짐 방지)
-        let msg = decodeURIComponent(rawMsg);
+            // URL 인코딩된 문자 복호화 (한글 깨짐 방지)
+            let msg = decodeURIComponent(rawMsg);
 
-        // "입금 500원"을 제거하고 뒤의 텍스트(이름)만 저장
-        let match = msg.replace(/.*입금 500원\s*/, ''); // "입금 500원" 및 앞부분 삭제
+            // "입금 500원"을 제거하고 뒤의 텍스트(이름)만 저장
+            let match = msg.match(/입금 500원\s*(.+)/);
+            if (match && match[1]) {
+                msg = match[1].trim(); // "입금 500원" 뒤의 텍스트만 저장
+            }
 
-        messages.push(match);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
-        loadMessages();
+            messages.push(msg);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
+            loadMessages();
+        } catch (error) {
+            console.error("Error processing message:", error);
+        }
     }
 
     // 4. URL에서 message 값을 읽어서 추가
     window.onload = function() {
-        loadMessages();
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.has("message")) {
-            addMessage(urlParams.get("message"));
+        try {
+            loadMessages();
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has("message")) {
+                addMessage(urlParams.get("message"));
+            }
+        } catch (error) {
+            console.error("Error in URL processing:", error);
         }
     };
 </script>
