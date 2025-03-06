@@ -1,92 +1,75 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>입금 기록</title>
-    <style>
-        body { font-family: Arial, sans-serif; text-align: center; }
-        h2 { margin-top: 20px; }
-        #messages { max-width: 500px; margin: auto; border: 1px solid #ddd; padding: 10px; }
-    </style>
-</head>
-<body>
-    <h2>입금 기록</h2>
-    <div id="messages">로딩 중...</div>
+<script>
+    const STORAGE_KEY = "deposit_records";
 
-    <script>
-        const STORAGE_KEY = "deposit_records";
-
-        // 1. 매달 1일이면 데이터 초기화
-        function checkReset() {
-            try {
-                const today = new Date();
-                if (today.getDate() === 1) { // 매달 1일
-                    localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
-                }
-            } catch (error) {
-                console.error("Error in checkReset:", error);
+    // 1. 매달 1일이면 데이터 초기화
+    function checkReset() {
+        try {
+            const today = new Date();
+            if (today.getDate() === 1) { // 매달 1일
+                localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
             }
+        } catch (error) {
+            console.error("Error in checkReset:", error);
         }
+    }
 
-        // 2. 기존 데이터 불러오기
-        function loadMessages() {
-            try {
-                checkReset();
-                const data = localStorage.getItem(STORAGE_KEY);
-                const messages = data ? JSON.parse(data) : [];
-                document.getElementById("messages").innerHTML = messages.length > 0 
-                    ? messages.map(msg => `<p>${msg}</p>`).join("")
-                    : "<p>아직 기록이 없습니다.</p>";
-            } catch (error) {
-                console.error("Error in loadMessages:", error);
-                document.getElementById("messages").innerHTML = "<p>데이터를 불러오는 중 오류 발생</p>";
-            }
+    // 2. 기존 데이터 불러오기
+    function loadMessages() {
+        try {
+            checkReset();
+            const data = localStorage.getItem(STORAGE_KEY);
+            const messages = data ? JSON.parse(data) : [];
+            document.getElementById("messages").innerHTML = messages.length > 0 
+                ? messages.map(msg => `<p>${msg}</p>`).join("")
+                : "<p>아직 기록이 없습니다.</p>";
+        } catch (error) {
+            console.error("Error in loadMessages:", error);
+            document.getElementById("messages").innerHTML = "<p>데이터를 불러오는 중 오류 발생</p>";
         }
+    }
 
-        // 3. MacroDroid에서 문자 내용을 받으면 저장
-        function addMessage(rawMsg) {
-            try {
-                let msg = decodeURIComponent(rawMsg); // 한글 깨짐 방지
+    // 3. MacroDroid에서 문자 내용을 받으면 저장
+    function addMessage(rawMsg) {
+        try {
+            let msg = decodeURIComponent(rawMsg); // URL 인코딩된 문자 복호화
 
-                // 기존 데이터 불러오기
-                let data = localStorage.getItem(STORAGE_KEY);
-                let messages = data ? JSON.parse(data) : [];
+            // 기존 데이터 불러오기
+            let data = localStorage.getItem(STORAGE_KEY);
+            let messages = data ? JSON.parse(data) : [];
 
-                // 로그 출력 (디버깅용)
-                console.log("받은 메시지:", msg);
-                console.log("기존 데이터:", messages);
+            // 로그 출력 (디버깅용)
+            console.log("받은 메시지:", msg);
+            console.log("기존 데이터:", messages);
 
-                // 중복 방지: 같은 메시지가 여러 번 추가되지 않도록 설정
-                if (!messages.includes(msg)) {
-                    messages.push(msg);
-                    localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
-                    loadMessages();
-                }
-
-                // 디버깅용 로그 추가
-                console.log("업데이트된 데이터:", localStorage.getItem(STORAGE_KEY));
-
-            } catch (error) {
-                console.error("Error in addMessage:", error);
-            }
-        }
-
-        // 4. URL에서 message 값을 읽어서 추가
-        window.onload = function() {
-            try {
+            // 중복 방지: 같은 메시지가 여러 번 추가되지 않도록 설정
+            if (!messages.includes(msg)) {
+                messages.push(msg);
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
                 loadMessages();
-                const urlParams = new URLSearchParams(window.location.search);
-                if (urlParams.has("message")) {
-                    addMessage(urlParams.get("message"));
-
-                    // 강제 새로고침 방지 → 데이터만 추가
-                }
-            } catch (error) {
-                console.error("Error in URL processing:", error);
             }
-        };
-    </script>
+
+            // 디버깅용 로그 추가
+            console.log("업데이트된 데이터:", localStorage.getItem(STORAGE_KEY));
+
+        } catch (error) {
+            console.error("Error in addMessage:", error);
+        }
+    }
+
+    // 4. URL에서 message 값을 읽어서 추가 (보안 문제 방지)
+    document.addEventListener("DOMContentLoaded", function() {
+        try {
+            loadMessages();
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has("message")) {
+                addMessage(urlParams.get("message"));
+                history.replaceState(null, "", window.location.pathname); // URL에서 message 제거 (보안 강화)
+            }
+        } catch (error) {
+            console.error("Error in URL processing:", error);
+        }
+    });
+</script>
 
 </body>
 </html>
