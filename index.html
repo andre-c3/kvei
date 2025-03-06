@@ -15,68 +15,30 @@
     <div id="messages">로딩 중...</div>
 
     <script>
-        const STORAGE_KEY = "deposit_records";
+        const SHEET_ID = "1CW_kDKBnp7i13a92BlraomJilzcNlw40hxf9-aPWWiU"; // Google Sheets ID 입력
+        const API_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`;
 
-        function checkReset() {
+        async function fetchSheetData() {
             try {
-                const today = new Date();
-                if (today.getDate() === 1) { // 매달 1일 데이터 초기화
-                    localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
-                }
-            } catch (error) {
-                console.error("Error in checkReset:", error);
-            }
-        }
+                const response = await fetch(API_URL);
+                const text = await response.text();
+                
+                // JSON 데이터 변환 (Google Sheets 데이터 파싱)
+                const json = JSON.parse(text.substring(47, text.length - 2));
+                const rows = json.table.rows;
 
-        function loadMessages() {
-            try {
-                checkReset();
-                const data = localStorage.getItem(STORAGE_KEY);
-                const messages = data ? JSON.parse(data) : [];
+                let messages = rows.map(row => `<p>${row.c[0].v}</p>`).join("");
+
                 document.getElementById("messages").innerHTML = messages.length > 0 
-                    ? messages.map(msg => `<p>${msg}</p>`).join("")
+                    ? messages 
                     : "<p>아직 기록이 없습니다.</p>";
             } catch (error) {
-                console.error("Error in loadMessages:", error);
+                console.error("Error loading data:", error);
                 document.getElementById("messages").innerHTML = "<p>데이터를 불러오는 중 오류 발생</p>";
             }
         }
 
-        function addMessage(rawMsg) {
-            try {
-                let msg = decodeURIComponent(rawMsg).trim();
-
-                let data = localStorage.getItem(STORAGE_KEY);
-                let messages = data ? JSON.parse(data) : [];
-
-                console.log("받은 메시지:", msg);
-                console.log("기존 데이터:", messages);
-
-                if (!messages.includes(msg)) {
-                    messages.push(msg);
-                    localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
-                    loadMessages();
-                }
-
-                console.log("업데이트된 데이터:", localStorage.getItem(STORAGE_KEY));
-
-            } catch (error) {
-                console.error("Error in addMessage:", error);
-            }
-        }
-
-        document.addEventListener("DOMContentLoaded", function() {
-            try {
-                loadMessages();
-                const urlParams = new URLSearchParams(window.location.search);
-                if (urlParams.has("message")) {
-                    addMessage(urlParams.get("message"));
-                    history.replaceState(null, "", window.location.pathname);
-                }
-            } catch (error) {
-                console.error("Error in URL processing:", error);
-            }
-        });
+        document.addEventListener("DOMContentLoaded", fetchSheetData);
     </script>
 
 </body>
