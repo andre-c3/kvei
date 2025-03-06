@@ -1,64 +1,58 @@
-<script>
-    const STORAGE_KEY = "deposit_records";
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>입금 기록</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; }
+        h2 { margin-top: 20px; }
+        #messages { max-width: 500px; margin: auto; border: 1px solid #ddd; padding: 10px; }
+    </style>
+</head>
+<body>
+    <h2>입금 기록</h2>
+    <div id="messages">로딩 중...</div>
 
-    // 1. 매달 1일이면 데이터 초기화
-    function checkReset() {
-        try {
+    <script>
+        const STORAGE_KEY = "deposit_records";
+
+        // 1. 매달 1일이면 데이터 초기화
+        function checkReset() {
             const today = new Date();
             if (today.getDate() === 1) { // 매달 1일
                 localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
             }
-        } catch (error) {
-            console.error("Error in checkReset:", error);
         }
-    }
 
-    // 2. 기존 데이터 불러오기
-    function loadMessages() {
-        try {
+        // 2. 기존 데이터 불러오기
+        function loadMessages() {
             checkReset();
             const data = localStorage.getItem(STORAGE_KEY);
             const messages = data ? JSON.parse(data) : [];
             document.getElementById("messages").innerHTML = messages.length > 0 
                 ? messages.map(msg => `<p>${msg}</p>`).join("")
                 : "<p>아직 기록이 없습니다.</p>";
-        } catch (error) {
-            console.error("Error in loadMessages:", error);
-            document.getElementById("messages").innerHTML = "<p>데이터를 불러오는 중 오류 발생</p>";
         }
-    }
 
-    // 3. MacroDroid에서 문자 내용을 받으면 저장 (URL 디코딩 추가)
-    function addMessage(rawMsg) {
-        try {
+        // 3. MacroDroid에서 문자 내용을 받으면 저장
+        function addMessage(msg) {
             const data = localStorage.getItem(STORAGE_KEY);
             const messages = data ? JSON.parse(data) : [];
-
-            // URL 인코딩된 문자 복호화 (한글 깨짐 방지)
-            let msg = decodeURIComponent(rawMsg);
-
-            // "[Web발신]", "[카카오뱅크]", 날짜 정보 제거 (필요할 경우)
-            msg = msg.replace(/\[.*?\]/g, '').trim(); // 대괄호([]) 안의 내용 삭제
-            msg = msg.replace(/\d{2}\/\d{2} \d{2}:\d{2}/, '').trim(); // 날짜 삭제
-
             messages.push(msg);
             localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
             loadMessages();
-        } catch (error) {
-            console.error("Error in addMessage:", error);
         }
-    }
 
-    // 4. URL에서 message 값을 읽어서 추가
-    window.onload = function() {
-        try {
+        // 4. MacroDroid에서 문자 내용을 추가할 수 있도록 API 기능 제공
+        window.onload = function() {
             loadMessages();
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.has("message")) {
                 addMessage(urlParams.get("message"));
             }
-        } catch (error) {
-            console.error("Error in URL processing:", error);
-        }
-    };
-</script>
+        };
+    </script>
+
+</body>
+</html>
